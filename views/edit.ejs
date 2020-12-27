@@ -1,0 +1,21 @@
+<html>
+<body>
+	<h2>Edit</h2>
+	Please do not enter spacebar, use "-" instead
+	<hr>	
+	<form action="/update" method="POST" enctype="multipart/form-data">
+        Name: <input name="name1" value= <%= c.name %>><br>
+        Borough: <input name="borough" value= <%= c.borough %>><br>
+		Cuisine: <input name="cuisine" value= <%= c.cuisine %>><br>
+		Street: <input name="street" value= <%= c.street %>><br>
+		Building: <input name="building" value= <%= c.building %>><br>
+		Zipcode: <input name="zipcode" value= <%= c.zipcode %>><br>
+		GPS coor(lon.): <input name="lon" value= <%= c.coordlon %>><br>
+		GPS coor(lat.): <input name="lat" value= <%= c.coordlat %>><br>
+        Photo: <input type="file" name="photo" img src="data:image/jpg;base64, <%= c.photo %>"><br>
+        <input type="hidden" name="_id" value=<%= c._id %>><br>
+		<input type="submit" value="Update">
+	</form>
+</body>
+
+</html>

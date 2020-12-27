@@ -1,0 +1,19 @@
+<html>
+   <body>
+      <H1>Result</H1>
+      <hr>
+      <ul>
+        Restaurant list:
+        <% for (var c of Restaurant) { %>
+            <%  if ((c.name == name && c.borough == borough && c.cuisine == cuisine)||c.borough == borough) { %>
+                <button onclick="window.location.href='/display?_id=<%= c._id %>'"></a><%= c.name %></button>
+            <% } %>   
+        <% } %>
+        <br>
+        No more result found.       
+      </ul>
+      <hr>
+        <button onclick="window.location.href='/find'">Retry</button>
+        <button onclick="window.location.href='/read'">Home</button>
+   </body>
+</html>
