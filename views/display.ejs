@@ -12,16 +12,16 @@
 	    <p>Zipcode: <%= Restaurant.zipcode %></p>
 		<p>GPS: [<%= Restaurant.coordlon %>, <%= Restaurant.coordlat %>]</p>
 		<% if (Restaurant.grades) { %>
-		<% for (var c of Restaurant.grades ) { %>
-			<p>Rating: <%= c.score %> by(<%= c.user %>)</p>
-		<% } %>
+
+			<p>Rating: <%= Restaurant.grades.score %> by(<%= Restaurant.grades.user %>)</p>
+
 		<% } %>
 	    <p>Created by: <%= Restaurant.owner %></p>
 	    <% if (Restaurant.coord) { %>
 	  	<button onclick="window.location.href='/gmap?lat=<%= Restaurant.coordlon%>&lon=<%= Restaurant.coordlat%>&zoom=15'">Map</button>
 		<% } %>
 
-		<button onclick="window.location.href='/rate'">Rate</button>
+		<button onclick="window.location.href='/rate?_id=<%= Restaurant._id %>'">Rate</button>
 
 		<% if (Restaurant.owner == name) { %>
 			<button onclick="window.location.href='/edit?_id=<%= Restaurant._id %>'">Edit</button>
