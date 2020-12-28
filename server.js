@@ -10,12 +10,6 @@ const assert = require('assert');
 const formidable = require('express-formidable');
 const bodyParser = require('body-parser');
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use(formidable());
-app.set('view engine','ejs');
-
 const SECRETKEY = 'I want to pass COMPS381F';
 
 const users = new Array(
@@ -29,6 +23,11 @@ app.use(session({
   name: 'loginSession',
   keys: [SECRETKEY]
 }));
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(formidable());
 
 const insertDocument = (db, doc, callback) => {
     const client = new MongoClient(mongourl);
@@ -46,19 +45,7 @@ const insertDocument = (db, doc, callback) => {
             assert.equal(err,null);          
             callback(results);
         }
-        );
-        db.collection('Restaurant').update(
-            { 
-                "grades": "",
-                "rate" : "",
-            },
-            { 
-                "$push": {
-                    "groups.$.groupMembers" : "bill"
-                }
-            }
-        )
-        
+        );    
     });
 }
 
@@ -73,10 +60,18 @@ const findDocument = (db, criteria, callback) => {
 }
 
 const deleteDocument = (db, criteria, callback) => {
-    db.collection('Restaurant').deleteOne(criteria, (err,results) => {
-        assert.equal(err,null);
-        console.log('deleteMany was successful');
-        callback(results);
+
+    var DOCID = {};
+    DOCID['_id'] = ObjectID(criteria);
+
+        db.collection('Restaurant').deleteMany(criteria,            
+        {
+            $set : DocID
+        },(err,results) => {
+            client.close();
+            assert.equal(err,null);
+            console.log('Delete was successful');
+            callback(results);
     })
 }
 
@@ -114,6 +109,8 @@ const handle_Create = (user,req, res, criteria) => {
 	updateDoc['coordlon'] = req.fields.lon;
     updateDoc['coordlat'] = req.fields.lat;
     updateDoc['owner'] = user;
+    updateDoc['user'] = '';
+    updateDoc['rate'] = '';
     if (req.files.photo.size > 0) {
         fs.readFile(req.files.photo.path, (err,data) => {
             assert.equal(err,null);
@@ -195,14 +192,17 @@ const handle_Edit = (res, criteria) => {
     });
 }
 
-const handle_Delete = (id,res, criteria) => {
+const handle_Delete = (res, criteria) => {
     const client = new MongoClient(mongourl);
     client.connect((err) => {
         assert.equal(null, err);
         console.log("Connected successfully to server");
         const db = client.db(dbName);
-        
-        deleteDocument(db, criteria, (results) => {
+
+        let DOCID = {};
+        DOCID['_id'] = ObjectID(criteria._id)
+
+        deleteDocument(db, criteria._id, (results) => {
             client.close();
             console.log("Closed DB connection");
             console.log(results);
@@ -211,20 +211,36 @@ const handle_Delete = (id,res, criteria) => {
     });
 }
 
-const handle_Rate= (req, res, criteria) => {
+const handle_Rating = (res, criteria) => {
+    const client = new MongoClient(mongourl);
+    client.connect((err) => {
+        assert.equal(null, err);
+        console.log("Connected successfully to server");
+        const db = client.db(dbName);
+
+        let DOCID = {};
+        DOCID['_id'] = ObjectID(criteria._id)
+        let cursor = db.collection('Restaurant').find(DOCID);
+        cursor.toArray((err,docs) => {
+            client.close();
+            assert.equal(err,null);
+            res.status(200).render('rate',{c: docs[0]});
+        });
+
+    });
+}
+
+const handle_Rate= (user,req, res, criteria) => {
 
     var DOCID = {};
     DOCID['_id'] = ObjectID(req.fields._id);
     var updateDoc = {};
-    updateDoc['rate'] = 
-
-	updateDoc['coordlat'] = req.fields.lat;
+    updateDoc['rate'] = req.fields.rate;
+	updateDoc['user'] = user;
         updateDocument(DOCID, updateDoc, (results) => {
         res.status(200).render('info', {message: `Updated ${results.result.nModified} document(s)`})
     });
 }
-
-
 
 const handle_Update = (req, res, criteria) => {
 
@@ -257,7 +273,7 @@ const handle_Update = (req, res, criteria) => {
 app.get('/', (req,res) => {
 	console.log(req.session);
 	if (!req.session.authenticated) { 
-		res.redirect('/login');
+        res.redirect('/login');
 	} else {
 		res.redirect('/read');
 	}
@@ -274,7 +290,8 @@ app.post('/login', (req,res) => {
 			req.session.username = req.body.name;	 	
 		}
 	});
-	res.redirect('/');
+    res.redirect('/');
+    console.log(req.body.name);
 });
 
 app.get('/read', (req,res) => {
@@ -310,12 +327,6 @@ app.post('/result', (req,res) => {
     handle_Find(name,borough,cuisine,res, req.query.docs);
 })
 
-app.post('/rated', (req,res) => {
-    const user = req.session.username;
-    var score = req.body.rate;
-    handle_Rate(score,user,res, req.query.docs);
-})
-
 app.get('/display', (req,res) => {
 	const user = req.session.username;
 	handle_Display(user,res, req.query);
@@ -331,8 +342,11 @@ app.get('/gmap', (req,res) => {
 })
 
 app.get('/rate', (req,res) => {
-	const user = req.session.username;
-	res.status(200).render('rate',{user});
+    if (req.body.rate >10 || req.body.rate < 1) {
+        res.status(200).render('info', {message: `Invalid number`});
+    } else {
+     handle_Rating(res,req.query);
+    }
 })
 
 app.get('/edit', (req,res) => {	
@@ -342,6 +356,12 @@ app.get('/edit', (req,res) => {
 app.get('/delete', (req,res) => {	
 	handle_Delete(res, req.query);
 })
+
+app.post('/rated', (req,res) => {
+    const user = req.session.username;
+    handle_Rate(user,req, res, req.query);
+})
+
 app.post('/update', (req,res) => {
     handle_Update(req, res, req.query);
 })
