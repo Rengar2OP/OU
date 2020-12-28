@@ -3,9 +3,10 @@
 <body>
 	<h2>Rate</h2>
 	<hr>
-	<form action="/rated" method="post">
+	<form action="/rated" method="POST" enctype="multipart/form-data">
         Rate: <input name="rate"><br>
-        Between 1 to 10
+		Between 1 to 10<br>
+		<input type="hidden" name="_id" value=<%= c._id %>><br>
 		<input type="submit" value="Rate">
 	</form>
 </body>
