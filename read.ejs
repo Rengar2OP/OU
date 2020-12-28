@@ -1,0 +1,15 @@
+<html>
+   <body>
+      <H1>Restaurant</H1>Username:<%= name%>
+      <hr>
+      <button onclick="window.location.href='/new'">Create new Restaurant</button>
+      <button onclick="window.location.href='/find'">Find Restaurant</button>
+      <hr>
+      <ul>
+         Restaurant list:
+         <% for (var c of Restaurant) { %>
+         <li><button onclick="window.location.href='/display?_id=<%= c._id %>'"></a><%= c.name %></button></li>
+         <% } %>
+      </ul>
+   </body>
+</html>
